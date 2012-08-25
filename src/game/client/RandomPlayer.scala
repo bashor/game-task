@@ -16,7 +16,7 @@ class RandomPlayer(val name: String) extends Player {
     while (true) {
       val (i, j) = (Random.nextInt(3), Random.nextInt(3))
 
-      if (board(i)(j).contains(0)) return (i, j)  K
+      if (board(i)(j).contains(0)) return (i, j)
     }
     (0, 0)
   }
