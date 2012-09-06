@@ -43,8 +43,10 @@ object GameServer {
   }
 
   def game(first: Player, second: Player, board: Array[Array[Array[Int]]] = Array.fill(4, 4, 4)(0)): Int = {
+    def convertToList: List[List[List[Int]]] = board.map(_.map(_.toList).toList).toList
+
     //make turn
-    val listBoard = board.map(_.map(_.toList).toList).toList
+    val listBoard = convertToList
     val executor = Executors.newSingleThreadExecutor();
     val future = executor.submit(new Callable[(Int, Int)] {
       def call() = first.makeTurn(listBoard)
@@ -63,6 +65,19 @@ object GameServer {
     if (index == -1) return -1 //forfeiture
     board(x)(y)(index) = 1
     //check board
+    val winningCondition = checkWinningCondition(convertToList)
+    if (winningCondition >= 0) return winningCondition
+    //update board
+    for (i <- 0 to 3; j <- 0 to 3; k <- 0 to 3) board(i)(j)(k) = board(i)(j)(k) * -1
+    -game(second, first, board)
+  }
+
+  /**
+   * This method doesn't check player '-1' winning condition
+   * @param board game board
+   * @return 1 - player with '1' wins, 0 - it's a tie, -1 - no winners or player '-1' wins
+   */
+  def checkWinningCondition(board: List[List[List[Int]]]): Int = {
     def check(fun: Int => Int): Boolean = {
       for (k <- 0 to 3) {
         if (fun(k) != 1) return false
@@ -86,8 +101,6 @@ object GameServer {
     if (check(p => board(p)(p)(3 - p))) return 1
     if (check(p => board(p)(3 - p)(3 - p))) return 1
     if (board.forall(_.forall(_.forall(_ != 0)))) return 0
-    //update board
-    for (i <- 0 to 3; j <- 0 to 3; k <- 0 to 3) board(i)(j)(k) = board(i)(j)(k) * -1
-    -game(second, first, board)
+    return -1
   }
 }
