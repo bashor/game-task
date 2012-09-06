@@ -12,7 +12,7 @@ import java.util.concurrent.{TimeUnit, TimeoutException, Callable, Executors}
 object GameServer {
   val TIMEOUT = 1000
 
-  val players: List[Player] =
+  private val players: List[Player] =
     List(
       new RandomPlayer("Random"),
       new StackPlayer("Stack")
@@ -42,7 +42,7 @@ object GameServer {
     System.exit(0)
   }
 
-  def game(first: Player, second: Player, board: Array[Array[Array[Int]]] = Array.fill(4, 4, 4)(0)): Int = {
+  private def game(first: Player, second: Player, board: Array[Array[Array[Int]]] = Array.fill(4, 4, 4)(0)): Int = {
     def convertToList: List[List[List[Int]]] = board.map(_.map(_.toList).toList).toList
 
     //make turn
