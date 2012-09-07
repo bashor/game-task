@@ -1,7 +1,7 @@
 # Task
 1. Fork Project
 2. Implement in game.client package Player trait with class name YourNamePlayer
-3. Make pull request. Pull request should contain only one new added file with compilable code
+3. Send it by e-mail
 # Implementation description
 In this task you have only to implement one move in "Score Four" game (timeout for turn is 1 second). Already implemented two players: player,
 which use only move in the corner, and random player. Task is to implement something better. After all solution will be
