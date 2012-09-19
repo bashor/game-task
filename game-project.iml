@@ -15,6 +15,7 @@
     <orderEntry type="jdk" jdkName="1.6" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="scala" level="project" />
+    <orderEntry type="library" exported="" name="Players" level="project" />
   </component>
 </module>
 

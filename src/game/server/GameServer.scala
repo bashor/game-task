@@ -14,30 +14,63 @@ object GameServer {
 
   private val players: List[Player] =
     List(
-      new RandomPlayer("Random"),
-      new StackPlayer("Stack")
+//      new RandomPlayer("Random"),
+//      new StackPlayer("Stack"),
+//      new BashorovStackPlayer("BashorStack"),
+//      new BashorovRandomPlayer("BashorRandom"),
+//      new BashorovBfsPlayer("BashorBfs"),
+      new BashorovSmartPlayer("BashorovSmarty"),
+//      new BashorovSmart2Player("BashorovSmarty 2"),
+      new KrinkinPlayer("Krinkin")
+//      new SergeyLazarevPlayer("Lazarev"),
+//      new IvanovakAlpha2("Ivanov")
     )
 
   def main(args: Array[String]) {
+//    for (l <- 1 to 10)
+    {
     val results = mutable.HashMap.empty[String, Int]
-    for (player <- players) results += ((player.name, 0))
+    val win = mutable.HashMap.empty[String, Int]
+    val loss = mutable.HashMap.empty[String, Int]
+    val tie = mutable.HashMap.empty[String, Int]
+
+    for (player <- players) {
+      results += ((player.name, 0))
+      win += ((player.name, 0))
+      loss += ((player.name, 0))
+      tie += ((player.name, 0))
+    }
+//    for (l <- 1 to 5)
     for (first <- players; second <- players if first ne second) {
       val gameResult = game(first, second)
       if (gameResult == 0) {
+//        println(s"tie $first $second")
         results.update(first.name, results(first.name) + 1)
         results.update(second.name, results(second.name) + 1)
+        tie.update(first.name, tie(first.name) + 1)
+        tie.update(second.name, tie(second.name) + 1)
       }
       if (gameResult == 1) {
+//        println(s"win $first $second")
         results.update(first.name, results(first.name) + 2)
+        win.update(first.name, win(first.name) + 1)
+        loss.update(second.name, loss(second.name) + 1)
       }
       if (gameResult == -1) {
+//        println(s"win $second $first")
         results.update(second.name, results(second.name) + 2)
+        win.update(second.name, win(second.name) + 1)
+        loss.update(first.name, loss(first.name) + 1)
       }
+      println("----")
     }
     results.toList.sortBy(-_._2).foreach {
       case tuple =>
         val (player, score) = tuple
-        println(s"${player}: ${0.5 * score}")
+        val k = (win(player), loss(player), tie(player))
+        println(s"${player}: ${0.5 * score} $k")
+    }
+//  println("----")
     }
     System.exit(0)
   }
@@ -56,14 +89,24 @@ object GameServer {
         future.get(TIMEOUT, TimeUnit.MILLISECONDS)
       }
       catch {
-        case e: TimeoutException => return -1 //forfeiture
+        case e: TimeoutException => {
+          println(s"TIMEOUT :( (${first.name})")
+          return -1
+        } //forfeiture
       }
     executor.shutdownNow()
-    if (!0.to(3).contains(x) || !0.to(3).contains(y)) return -1 //forfeiture
+    if (!0.to(3).contains(x) || !0.to(3).contains(y)){
+      println(s"Bad pos:( ${(x, y)} (${first.name})")
+      return -1
+    } //forfeiture
     //update board
     val index = board(x)(y).indexOf(0)
-    if (index == -1) return -1 //forfeiture
+    if (index == -1){
+      println(s"Bad pos:( ${(x, y)} dosn't free (${first.name})")
+      return -1 //forfeiture
+    }
     board(x)(y)(index) = 1
+    println(s"${first.name}\t${(x, y)}")
     //check board
     val winningCondition = checkWinningCondition(convertToList)
     if (winningCondition >= 0) return winningCondition

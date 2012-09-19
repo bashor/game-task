@@ -6,6 +6,8 @@
       <root url="jar://$PROJECT_DIR$/libraries/scala-compiler.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/apps/scala/src/scala-library-src.jar!/" />
+    </SOURCES>
   </library>
 </component>
