@@ -16,7 +16,7 @@ class BashorovSmartPlayer(val name: String) extends Player {
     findPosition(board)
   }
 
-  class Rating(val mine3: Int, val opponent3: Int, val mine2free2: Int, val opponent2free2: Int, val mine1free3: Int, val free4: Int) {
+  private class Rating(val mine3: Int, val opponent3: Int, val mine2free2: Int, val opponent2free2: Int, val mine1free3: Int, val free4: Int) {
     def +(a: Rating): Rating =
       new Rating(mine3 + a.mine3, opponent3 + a.opponent3, mine2free2 + a.mine2free2,
         opponent2free2 + a.opponent2free2, mine1free3 + a.mine1free3, free4 + a.free4)
@@ -42,14 +42,15 @@ class BashorovSmartPlayer(val name: String) extends Player {
 
     override def toString() = s"R($mine3, $opponent3, $mine2free2, $opponent2free2, $mine1free3, $free4)"
   }
-  object Rating {
-    def zero = new Rating(0, 0, 0, 0, 0, 0)
-    def mine3 = new Rating(1, 0, 0, 0, 0, 0)
-    def opponent3 = new Rating(0, 1, 0, 0, 0, 0)
-    def mine2free2 = new Rating(0, 0, 0, 1, 0, 0)
-    def opponent2free2 = new Rating(0, 0, 0, 1, 0, 0)
-    def mine1free3 = new Rating(0, 0, 0, 0, 1, 0)
-    def free4 = new Rating(0, 0, 0, 0, 0, 1)
+  private object Rating {
+    val zero = new Rating(0, 0, 0, 0, 0, 0)
+    val mine3 = new Rating(1, 0, 0, 0, 0, 0)
+    val opponent3 = new Rating(0, 1, 0, 0, 0, 0)
+    val mine2free2 = new Rating(0, 0, 0, 1, 0, 0)
+    val opponent2free2 = new Rating(0, 0, 0, 1, 0, 0)
+    val mine1free3 = new Rating(0, 0, 0, 0, 1, 0)
+    val free4 = new Rating(0, 0, 0, 0, 0, 1)
+    val bad = new Rating(-1, -1, -1, -1, -1, -1)
   }
 
   private def findPosition(board: listBoard_t): (Int, Int) = {
@@ -60,10 +61,10 @@ class BashorovSmartPlayer(val name: String) extends Player {
       for (i <- 0 to 3; j <- 0 to 3) {
         val k = board(i)(j).indexOf(0);
         if (k != -1) {
-          return (calcRating(board, (i, j)), (i, j));
+          return (calcRating(board, (i, j, k)), (i, j));
         }
       }
-      (calcRating(board, (0, 0)), (0, 0))
+      (calcRating(board, (0, 0, 0)), (0, 0))
     }
 
     var (maxRating, maxRatingPos)= initMaxRating()
@@ -71,7 +72,7 @@ class BashorovSmartPlayer(val name: String) extends Player {
     for (i <- 0 to 3; j <- 0 to 3) {
       val k = board(i)(j).indexOf(0);
       if (k != -1) {
-        val rating = calcRating(board, (i, j))
+        val rating = calcRating(board, (i, j, k))
         if (maxRating < rating) {
           maxRating = rating
           maxRatingPos = (i, j)
@@ -82,7 +83,11 @@ class BashorovSmartPlayer(val name: String) extends Player {
     maxRatingPos
   }
 
-  def calcRating(board: listBoard_t, newPos: (Int, Int)): Rating = {
+  private def calcRating(board: listBoard_t, newPos: (Int, Int, Int)): Rating = {
+    val (x, y, k) =  newPos
+    if (!(0 to 3).contains(k))
+      return Rating.zero
+
     def check(fun: Int => Int): Rating = {
       var (mine, anothers, free) = (0, 0, 0)
       for (l <- 0 to 3) {
@@ -100,25 +105,29 @@ class BashorovSmartPlayer(val name: String) extends Player {
           return Rating.mine3
         else if (anothers == 3)
           return Rating.opponent3
-      } else if (free == 2) {
+      }
+
+      if (k < 3 && calcRating(board, (x, y, k+1)).opponent3 > 0 ) {
+        return Rating.bad
+      }
+
+      if (free == 2) {
         if (mine == 2 )
           return Rating.mine2free2
         else if (anothers == 2)
           return Rating.opponent2free2
-      } else if (free == 3) {
-        if (mine == 1)
+      }
+
+      if (free == 3 && mine == 1) {
           return Rating.mine1free3
-      } else if (free == 4) {
+      }
+
+      if (free == 4) {
         return Rating.free4
       }
 
       Rating.zero
     }
-
-    val (x, y) =  newPos
-    val k = board(x)(y).indexOf(0)
-    if (k == -1)
-      return Rating.zero
 
     check(board(_)(y)(k)) +
       check(board(x)(_)(k)) +
